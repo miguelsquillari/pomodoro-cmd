@@ -7,12 +7,15 @@ using namespace std;
 
 
 // definiendo vars
-int cantPomodoros = 1;
+int cantPomodoros = 2;
 int pomodoro_min = 25;
 int sec = 59;
 int hour = 0;
-
 int pomodoro_rest = 5; // 5 min de descanzo
+
+string input;
+
+void processInput(string input);
 
 void playBeep(){
     for (int i = 0; i < 5 ; i++){
@@ -42,29 +45,38 @@ void showOptions(){
 
 
 void display(){    
+    system("cls");
     cout << setfill(' ') << setw(50) << "	POMODORO TIMER		 \n";
+    cout << setfill(' ') << setw(50) << "	CANT POMODORO 		 " << cantPomodoros << "\n";
+    cout << setfill(' ') << setw(50) << "	" << pomodoro_min << ":" << sec << "  \n";
+   // printf("\t [%.2d:%.2d:%.2d]", cantPomodoros, pomodoro_min, sec);
 }
 
  
 // Pomodorosss !!
-void pomodoro(){
-
+void pomodoro(){    
     while(cantPomodoros !=0){
+        display();
         sec --;
-
         if (sec==0){
             pomodoro_min--;
             sec = 59;
         }
-    }
-
-    playBeep();
+        if (pomodoro_min == 0){
+            cantPomodoros--;
+            playBeep();
+        }
+        Sleep(1000);
+    }    
 }
 
+void processInput(string input){
+    cout << input;
+}
 
 int main(){
     pomodoro();
-    cout << "hola miguel" << endl;
+    cout << "INPUT: " << endl;
     cin.get();
     return 0;
 }
