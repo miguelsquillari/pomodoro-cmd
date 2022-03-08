@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <windows.h>
-#include <iomanip>
+//#include <iomanip>
 #include <bits/stdc++.h>
 #include <chrono>
 #include <ctime>
@@ -11,17 +11,21 @@ using namespace std;
 
 HANDLE h = GetStdHandle( STD_OUTPUT_HANDLE );
 
+
 void playBeep();
 void help();
 
 void color( int colorn){
-   SetConsoleTextAttribute( h,  colorn);        // need to add some checking ... job for another day
+   SetConsoleTextAttribute( h,  colorn);
 }
 
 // definiendo vars
 bool startTimer = false;
 bool isMatrixRain = false;
-int cantPomodoros = 0;
+// Pomodoros vars
+int cur_cantPomodoros = 0; // current cant pomodoros
+int cantPomodoros = 0; // cant de pomodoros
+// Alarm
 int cantHs = 0;
 int mins = 0;
 int sec = 00;
@@ -33,19 +37,26 @@ char matrix[] = {"klm  8 А В C DEFG  H Г ДЅЗИ ѲІК  ЛМН  ѮѺП  Ч�
 string input;
 
 
+void planPomodoros(){
+    for (int i = 0;i < cantPomodoros; i++){
+        cout << " Pomodoro";
+    }
+}
 
 
 void help(){
     cout << " HELP \n";
     cout << " Pomodoro timer \n";
     cout << " Ingrese la cant de pomodoros \n";
-    cout << " el sistema comenzara la cuenta y añadira 5 mins de descanzo \n";
+    cout << " el sistema comenzara la cuenta y agregara 5 mins de descanzo \n";
     cout << " por cada pomodoro que se compute. Ejemplo: \n";    
-    cout << " pom 2 <Enter> \n";
+    cout << " cmd> pom 2 <Enter> \n";
+    cout << "  \n";
+    cout << "  Exit para salir de la aplicacon..\n";
 }
 
 
-
+/* Matrix rain, pero esta limitida a lineas, para que se muestre arriba. */
 void smallMatrixRain(){    
     int rnd = 0;    
     string rain = "";
@@ -81,9 +92,16 @@ void runMatrixRain(){
 // https://en.cppreference.com/w/cpp/chrono/c/strftime
 string getCurrentDateTime(){
    time_t now = time(0);   
-   char* dt = ctime(&now);
-   //cout << "Current date and time: " << dt << endl;   
+   char* dt = ctime(&now);   
    return dt;
+}
+
+
+string getCurrentDateTimeFormat(){
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::string s(30, '\0');
+    std::strftime(&s[0], s.size(), "%d-%m-%Y %H:%M:%S", std::localtime(&now));
+    return s;
 }
 
 int h_cur = 0;
@@ -91,55 +109,15 @@ int m_cur = 0;
 int s_cur = 0;
 
 // hora , min y sec de inicio.
-int h_inicio = 0;
-int m_inicio = 0;
-int s_inicio = 0;
-
-/* Seteo la hora:min:sec de inicio */
-void setInitTime(){
-    char buf[64];
-    time_t t = time(0);   
-    // Time Zone -3  int time_zone = -3;  
-    struct tm *tmp = gmtime(&t);    
-        h_inicio = ((t / 3600)-3) % 24;  
-        m_inicio = (t / 60) % 60;
-        s_inicio = t % 60;
-}
-
-
-/* ********************************************
-Calcular el tiempo restante
-almacenar hora : min : sec
- start time    16 : 35 : 54
-       +       25 : 00   
-         --------------
- final time   17 : 00 : 00
-
-*********************************************** */
-string getRemainingTime(){
-    char buf[64];
-    time_t t = time(0);     
-    struct tm *tmp = gmtime(&t);    
-        h_cur = ((t / 3600)-3) % 24;  
-        m_cur = (t / 60) % 60;
-        s_cur = t % 60;
-    // resto honra_min:sec
-    hour = h_cur - h_inicio;
-    mins = m_cur - m_inicio;
-    sec = s_cur --;
-
-  //  printf("%02d:%02d:%02d\n", h_, m_, s_);
-  //  strftime(buf, sizeof(buf), "%H:%M:%S\n", tmp);
-    //return strftime(buf, sizeof(buf), "%H:%M:%S\n", tmp);
-    return to_string(hour).append(":") + to_string(mins).append(":") + to_string(sec);
-}
-
+int h_ = 0;
+int m_ = 0;
+int s_ = 0;
 
 void welcome(){
-    cout << "  ------------------------------------------ \n";
-    cout << "    WELCOME TO TIMER COMMANDER v 0.01 Alpha \n";
+    cout << " ------------------------------------------------------ \n";
+    cout << "    WELCOME TO POMODORO COMMANDER v 0.01 Alpha \n";
     cout << "    Type Help to how to run commands. \n";
-    cout << "  ------------------------------------------ \n";
+    cout << " ------------------------------------------------------ \n";
     cout << "   \n";
 }
 
@@ -150,81 +128,67 @@ void display(){
     if (bar.length() >=25) bar ="|";  
     smallMatrixRain();
     cout << " \n";
-    cout << " -------------------------------------------- \n";
+    cout << " ------------------------------------------------------ \n";
+    cout << " Pomodoro Commander		 \n";
+    cout << " ------------------------------------------------------ \n";
     cout << " Current Date and time: " <<  getCurrentDateTime();
-    cout << " -------------------------------------------- \n";
-    cout << " POMODORO TIMER		 \n";
-    cout << " -------------------------------------------- \n";
-    cout << " Starter time: " << h_inicio << ":" << m_inicio << ":" <<  s_inicio << "  \n";
-    cout << " running:" << mins << ":" << sec << "  \n";
-   // cout << " >>>> " << getRemainingTime();
-    cout << " -------------------------------------------- \n";    
+    cout << " ------------------------------------------------------ \n";   
+    cout << " In Progress:";
+    printf("%02d:%02d:%02d\n", h_, m_, s_); 
+    cout << " ------------------------------------------------------ \n";
+    cout << " INFO:" << cantPomodoros << " Pomodoros  \n";
+    cout << " ------------------------------------------------------ \n";
     cout << "  " << bar;
     cout << " \n";
-    cout << " -------------------------------------------- \n";
-   // printf("\t [%.2d:%.2d:%.2d]", cantPomodoros, mins, sec);
+    cout << " ------------------------------------------------------ \n";
 }
 
+/* Beep params : xxx hertz (C5) , for 200 milliseconds .*/
 void playBeep(){
     for (int i = 0; i < 5 ; i++){
-		Beep(750,200); // xxx hertz (C5) for 200 milliseconds    			
-	}
+		Beep(750,150); }
 }
 
 
 
- 
+ int secs = 0;
 // runing pomodoros !!
-void runPomodoro(){    
-    string cancel = "";
+void runPomodoro(){        
     int milis = 200;
-    setInitTime();
+    auto start = std::chrono::system_clock::now();    
     while( true){        
         if (milis==800){  
             milis = 0;            
-            getRemainingTime();
+            auto end = std::chrono::system_clock::now();    
+            std::chrono::duration<double> elapsed_seconds = end-start;
+            secs = elapsed_seconds.count();
+            h_ = ((secs / 3600)) % 24;  
+            m_ = (secs / 60) % 60;
+            s_ = secs % 60;            
         }
         
-        if (mins==25){
+        if (m_==25){
             playBeep();
-            mins = 0;
-            cantPomodoros --;
-            setInitTime();
+            m_ = 0;
+            cantPomodoros --;  
+             if (cantPomodoros >=0){
+                 runPomodoro();
+             }            
         }
-        if (cantPomodoros ==0){break;}
+        if (cantPomodoros ==0){
+            getCurrentDateTime();
+            bar ="|";
+            display();        
+            break;
+        }
         Sleep(200);
-        milis = milis + 100;        
+        milis = milis + 200;        
         display();        
 		bar =  bar.append("|");	          
     }    
 }
 
 
-// runing Timer o Crono !!
-void runTimer(){        
-    while( true){        
-        sec --;
-        if (sec==0){
-            mins--;
-            sec = 59;
-        }
-        
-
-        if (hour==0 && mins ==0){
-            display();
-            playBeep();
-            break;
-        }
-         if (mins == 0){
-            cantPomodoros--;
-            playBeep();
-            mins = 59;        
-        }
-        Sleep(1000);
-        display();        
-		bar =  bar + ">> ";	          
-    }    
-}
 
 void processInput(string input){
     stringstream ss(input);
@@ -240,10 +204,11 @@ void processInput(string input){
         cout << "invalid command" << endl;
     }else{        
         while (ss >> cmd) {                        
-            if (cmd == "pom"){                                                
+            if (cmd == "pom" || cmd == "POM"){                                                
                 ss >> p1;
                 cantPomodoros = p1;                
                 runPomodoro();
+                
             }
 
             if (cmd == "crono"){                                                                
@@ -251,7 +216,7 @@ void processInput(string input){
                 ss >> p2;
                 cantPomodoros = p1;
                 mins = p2;
-                runTimer();
+                //runTimer();
             }
         }
     }
