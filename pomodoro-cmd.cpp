@@ -20,8 +20,9 @@ void color( int colorn){
 }
 
 // definiendo vars
-bool startTimer = false;
-bool isMatrixRain = false;
+//bool startTimer = false;
+//bool isMatrixRain = false;
+bool restActive = false;
 // Pomodoros vars
 int cur_cantPomodoros = 0; // current cant pomodoros
 int cantPomodoros = 0; // cant de pomodoros
@@ -35,13 +36,6 @@ int pomodoro_rest = 5; // 5 mins de descanzo
 char matrix[] = {"klm  8 А В C DEFG  H Г ДЅЗИ ѲІК  ЛМН  ѮѺП  ЧРС Т  Ѵ   Ф Х   Ѱ Ѿ  Ц ЅЗИ ѲІК  Л М Н   Ѯ    ѺП  Ч  Р  С  Т  ѴФ Х Ѱ Ѿ Ц  "};
 
 string input;
-
-
-void planPomodoros(){
-    for (int i = 0;i < cantPomodoros; i++){
-        cout << " Pomodoro";
-    }
-}
 
 
 void help(){
@@ -116,13 +110,12 @@ int s_ = 0;
 void welcome(){
     cout << " ------------------------------------------------------ \n";
     cout << "    WELCOME TO POMODORO COMMANDER v 0.01 Alpha \n";
-    cout << "    Type Help to how to run commands. \n";
+    cout << "    Type <<Help>> to know how to run commands. \n";
     cout << " ------------------------------------------------------ \n";
     cout << "   \n";
 }
 
 string bar ="|";  
-// Polimorfismo
 void display(){      
     system("cls");
     if (bar.length() >=25) bar ="|";  
@@ -133,8 +126,13 @@ void display(){
     cout << " ------------------------------------------------------ \n";
     cout << " Current Date and time: " <<  getCurrentDateTime();
     cout << " ------------------------------------------------------ \n";   
-    cout << " In Progress:";
-    printf("%02d:%02d:%02d\n", h_, m_, s_); 
+    if (!restActive){
+        cout << " In Progress:";
+        printf("%02d:%02d:%02d\n", h_, m_, s_); 
+    }else{
+        cout << "--> Break <-- ";
+        printf("%02d:%02d:%02d\n", h_, m_, s_); 
+    }
     cout << " ------------------------------------------------------ \n";
     cout << " INFO:" << cantPomodoros << " Pomodoros  \n";
     cout << " ------------------------------------------------------ \n";
@@ -155,7 +153,7 @@ void playBeep(){
 // runing pomodoros !!
 void runPomodoro(){        
     int milis = 200;
-    auto start = std::chrono::system_clock::now();    
+    auto start = std::chrono::system_clock::now();        
     while( true){        
         if (milis==800){  
             milis = 0;            
@@ -167,15 +165,27 @@ void runPomodoro(){
             s_ = secs % 60;            
         }
         
-        if (m_==25){
-            playBeep();
-            m_ = 0;
-            cantPomodoros --;  
-             if (cantPomodoros >=0){
-                 runPomodoro();
-             }            
-        }
-        if (cantPomodoros ==0){
+        if (cantPomodoros > 0){
+            if (!restActive){
+                if (m_==25){
+                    playBeep();
+                    m_ = 0;
+                    cantPomodoros --;  
+                    if (cantPomodoros >0){
+                        restActive = true;
+                        runPomodoro();
+                    }            
+                }
+            }else{
+                if (m_==5){
+                    restActive = false;
+                    playBeep();
+                    m_ = 0;                    
+                    runPomodoro();                                
+                }
+            }
+        }else{
+            restActive = false;        
             getCurrentDateTime();
             bar ="|";
             display();        
@@ -207,17 +217,8 @@ void processInput(string input){
             if (cmd == "pom" || cmd == "POM"){                                                
                 ss >> p1;
                 cantPomodoros = p1;                
-                runPomodoro();
-                
-            }
-
-            if (cmd == "crono"){                                                                
-                ss >> p1;
-                ss >> p2;
-                cantPomodoros = p1;
-                mins = p2;
-                //runTimer();
-            }
+                runPomodoro();                
+            }            
         }
     }
 }
@@ -238,7 +239,7 @@ void getConsoleCmds(){
 }
 
 int main(){
-    color( 9); // color 9 es el blue y el 10 el green
+    color(9); // color 9 es el blue y el 10 el green /4 dark red
     //rain();    
     welcome();
     getConsoleCmds();    
