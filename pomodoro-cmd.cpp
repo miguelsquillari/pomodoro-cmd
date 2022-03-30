@@ -15,7 +15,7 @@ HANDLE h = GetStdHandle( STD_OUTPUT_HANDLE );
 void playBeep();
 void help();
 
-void color( int colorn){
+void setColor( int colorn){
    SetConsoleTextAttribute( h,  colorn);
 }
 
@@ -37,16 +37,11 @@ char matrix[] = {"klm  8 А В C DEFG  H Г ДЅЗИ ѲІК  ЛМН  ѮѺП  Ч�
 
 string input;
 
+string cmd_help = " HELP \n  Pomodoro timer \n  Ingrese la cant de pomodoros \n  el sistema comenzara la cuenta y agregara 5 mins de descanzo \n  por cada pomodoro que se compute. Ejemplo: \n  cmd> pom 2 <Enter> \n   \n  setcolor <0 -15> ej setcolor 5 \n Exit para salir de la aplicacion..\n";
+
 
 void help(){
-    cout << " HELP \n";
-    cout << " Pomodoro timer \n";
-    cout << " Ingrese la cant de pomodoros \n";
-    cout << " el sistema comenzara la cuenta y agregara 5 mins de descanzo \n";
-    cout << " por cada pomodoro que se compute. Ejemplo: \n";    
-    cout << " cmd> pom 2 <Enter> \n";
-    cout << "  \n";
-    cout << "  Exit para salir de la aplicacon..\n";
+     cout << cmd_help;    
 }
 
 
@@ -121,11 +116,12 @@ void display(){
     if (bar.length() >=25) bar ="|";  
     smallMatrixRain();
     cout << " \n";
-    cout << " ------------------------------------------------------ \n";
+    cout << "------------------------------------------------------ \n";
     cout << " Pomodoro Commander		 \n";
     cout << " ------------------------------------------------------ \n";
     cout << " Current Date and time: " <<  getCurrentDateTime();
-    cout << " ------------------------------------------------------ \n";   
+    cout << " ------------------------------------------------------ \n";  
+
     if (!restActive){
         cout << " In Progress:";
         printf("%02d:%02d:%02d\n", h_, m_, s_); 
@@ -133,12 +129,14 @@ void display(){
         cout << "--> Break <-- ";
         printf("%02d:%02d:%02d\n", h_, m_, s_); 
     }
+    
     cout << " ------------------------------------------------------ \n";
     cout << " INFO:" << cantPomodoros << " Pomodoros  \n";
     cout << " ------------------------------------------------------ \n";
     cout << "  " << bar;
     cout << " \n";
     cout << " ------------------------------------------------------ \n";
+
 }
 
 /* Beep params : xxx hertz (C5) , for 200 milliseconds .*/
@@ -214,11 +212,16 @@ void processInput(string input){
         cout << "invalid command" << endl;
     }else{        
         while (ss >> cmd) {                        
-            if (cmd == "pom" || cmd == "POM"){                                                
+            // Comando Pom == Pomodoro
+            if (cmd == "pom" || cmd == "POM"){
                 ss >> p1;
                 cantPomodoros = p1;                
                 runPomodoro();                
             }            
+            if (cmd == "setColor" || cmd == "setcolor"){
+                ss >> p1;
+                setColor(p1);
+            }
         }
     }
 }
@@ -238,8 +241,23 @@ void getConsoleCmds(){
     }
 }
 
+void addTime(int mins){
+    using clock = std::chrono::system_clock;
+    clock::time_point nowp = clock::now();
+    cout<<"Enter the time that you want to add in minutes"<<endl;
+    int time_min;
+    cin>>time_min;  
+    cin.ignore();
+    clock::time_point end = nowp + std::chrono::minutes(time_min);
+    time_t nowt =  clock::to_time_t ( nowp );
+    time_t endt =  clock::to_time_t ( end);
+    std::cout  << " " << ctime(&nowt) << "\n";
+    std::cout << ctime(&endt) << std::endl;
+
+}
+
 int main(){
-    color(9); // color 9 es el blue y el 10 el green /4 dark red
+    setColor(3); // color 9 es el blue y el 10 el green /4 dark red / 3 lightblue
     //rain();    
     welcome();
     getConsoleCmds();    
